@@ -1,5 +1,7 @@
 package io.security.corespringsecurity.security.configs;
 
+import io.security.corespringsecurity.security.common.FormAuthenticationDetailsSource;
+import io.security.corespringsecurity.security.handler.CustomAccessDeniedHandler;
 import io.security.corespringsecurity.security.provider.FormAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
@@ -24,8 +27,9 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private AuthenticationDetailsSource authenticationDetailsSource;
+    private FormAuthenticationDetailsSource authenticationDetailsSource;
     // authenticationDetailsSource 클래스를 의존성 주입
+    // 이걸 상위 인터페이스인 AuthenticationDetailsSource 타입으로 주입받으니 HttpSecurity 설정기능이 좀 꼬였음
 
     @Autowired
     private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
@@ -86,6 +90,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .successHandler(customAuthenticationSuccessHandler) // 성공 핸들러는 기본 성공 Url API 설정보다 아래에
                 .failureHandler(customAuthenticationFailureHandler)
                 .permitAll()
+        .and()
+                .exceptionHandling()
+                .accessDeniedHandler(accessDeniedHandler())
+                // HttpSecurity 에서 예외 핸들링 API 에 접근거부핸들러 API 에 생성한 핸들러 객체를 주입
         ;
     }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        CustomAccessDeniedHandler customAccessDeniedHandler = new CustomAccessDeniedHandler();
+        customAccessDeniedHandler.setErrorPage("/denied");
+        return customAccessDeniedHandler;
+    } // 거부 핸들러를 빈 으로 지정했음
 }
