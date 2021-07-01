@@ -1,11 +1,13 @@
 package io.security.corespringsecurity.security.provider;
 
+import io.security.corespringsecurity.security.common.FormWebAuthenticationDetails;
 import io.security.corespringsecurity.security.service.AccountContext;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -13,7 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class CustomAuthenticationProvider implements AuthenticationProvider {
+public class FormAuthenticationProvider implements AuthenticationProvider {
 
     private UserDetailsService userDetailsService;
 
@@ -33,6 +35,14 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if(!passwordEncoder.matches(password, accountContext.getPassword() )) {
             throw new BadCredentialsException("BadCredentialsException");
         } // 꺼내온 토큰과 받은 패스워드와 일치하는지 확인, 암호화 때문에 인코더로
+
+        FormWebAuthenticationDetails details = (FormWebAuthenticationDetails) authentication.getDetails();
+        // 로그인 인증객체에서 세부정보 클래스도 추출
+        String secretKey = details.getSecretKey();
+        // 인자 추출
+        if(secretKey == null || !"secret".equals(secretKey)) {
+            throw new InsufficientAuthenticationException("InsufficientAuthenticationException");
+        } // 세부 정보에 대한 인증 로직
 
         UsernamePasswordAuthenticationToken token =
                 new UsernamePasswordAuthenticationToken(accountContext.getAccount(), null, accountContext.getAuthorities());
