@@ -15,6 +15,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -24,6 +26,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private AuthenticationDetailsSource authenticationDetailsSource;
     // authenticationDetailsSource 클래스를 의존성 주입
+
+    @Autowired
+    private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+
+    @Autowired
+    private AuthenticationFailureHandler customAuthenticationFailureHandler;
+
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -61,7 +70,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(final HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/","/users","/users/login/**").permitAll() // 보안필터를 거쳐야함 들어감
+                .antMatchers("/","/users","/users/login/**", "/login*").permitAll() // 보안필터를 거쳐야함 들어감
                 .antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
                 .antMatchers("/config").hasRole("ADMIN")
@@ -74,6 +83,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationDetailsSource(authenticationDetailsSource)
                 // 주입받은 authenticationDetailsSource 를 authenticationDetailsSource api 에 적용하여 동작하도록 설정
                 .defaultSuccessUrl("/")
+                .successHandler(customAuthenticationSuccessHandler) // 성공 핸들러는 기본 성공 Url API 설정보다 아래에
+                .failureHandler(customAuthenticationFailureHandler)
                 .permitAll()
         ;
     }
