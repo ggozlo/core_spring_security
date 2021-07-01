@@ -1,0 +1,33 @@
+package io.security.corespringsecurity.controller.login;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Controller
+public class LoginController {
+
+    @GetMapping("/login")
+    public String login() {
+        return "user/login/login";
+    }
+
+    @GetMapping("/logout") // get 방식의 로그아웃 직접 구현
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+        // 로그아웃을 위한 서블릿을 인자로 받음
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // SecurityContextHolder 에서 인증객체를 받아옴
+        if(authentication != null) {
+            new SecurityContextLogoutHandler().logout(request,response,authentication);
+            // 인증객체가 존재한다면 로그아웃 핸들러를 생성해 로그아웃처리
+        }
+
+        return "redirect:/login";
+    }
+}
