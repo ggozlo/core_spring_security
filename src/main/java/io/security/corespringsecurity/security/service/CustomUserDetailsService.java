@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     // 로그인 정보와 대조하기 위해 DAO 를 의존함
 
     @Override
+    @Transactional
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
     // 사용자 정보를 탐색하고, 사용자 객체를 반환하는 메서드 구현
 

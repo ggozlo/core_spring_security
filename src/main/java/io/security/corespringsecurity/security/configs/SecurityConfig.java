@@ -1,6 +1,7 @@
 package io.security.corespringsecurity.security.configs;
 
 import io.security.corespringsecurity.security.common.FormAuthenticationDetailsSource;
+import io.security.corespringsecurity.security.filter.AjaxLoginProcessingFilter;
 import io.security.corespringsecurity.security.handler.CustomAccessDeniedHandler;
 import io.security.corespringsecurity.security.provider.FormAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationDetailsSource;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -20,10 +21,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @Slf4j
+@Order(1)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -74,13 +78,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(final HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/","/users","/users/login/**", "/login*").permitAll() // 보안필터를 거쳐야함 들어감
+                .antMatchers("/", "/users", "/users/login/**", "/login*").permitAll() // 보안필터를 거쳐야함 들어감
                 .antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
                 .antMatchers("/config").hasRole("ADMIN")
                 .anyRequest().authenticated()
 
-        .and()
+            .and()
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login_proc")
@@ -90,11 +94,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .successHandler(customAuthenticationSuccessHandler) // 성공 핸들러는 기본 성공 Url API 설정보다 아래에
                 .failureHandler(customAuthenticationFailureHandler)
                 .permitAll()
-        .and()
+            .and()
                 .exceptionHandling()
-                .accessDeniedHandler(accessDeniedHandler())
-                // HttpSecurity 에서 예외 핸들링 API 에 접근거부핸들러 API 에 생성한 핸들러 객체를 주입
-        ;
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                // 예외 핸들러가 보낼 주소
+                .accessDeniedPage("/denied")
+                .accessDeniedHandler(accessDeniedHandler());
+            // HttpSecurity 에서 예외 핸들링 API 에 접근거부핸들러 API 에 생성한 핸들러 객체를 주입
+
     }
 
     @Bean
@@ -103,4 +110,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         customAccessDeniedHandler.setErrorPage("/denied");
         return customAccessDeniedHandler;
     } // 거부 핸들러를 빈 으로 지정했음
+
+
+
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    } // 인증 관리자를 획득하는 메서드 근데 수정 안할거면 그냥 써도 되지 않나?
 }
