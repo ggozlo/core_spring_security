@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class CustomAccessDeniedHandler implements AccessDeniedHandler {
+public class FormAccessDeniedHandler implements AccessDeniedHandler {
 // 인가 거부시의 동작할 핸들러 생성
     private String errorPage;
     // 인가 거부시의 거부된 경로를 필드값으로 설정

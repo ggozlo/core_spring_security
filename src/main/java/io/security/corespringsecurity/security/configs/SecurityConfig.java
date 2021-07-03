@@ -1,8 +1,9 @@
 package io.security.corespringsecurity.security.configs;
 
 import io.security.corespringsecurity.security.common.FormAuthenticationDetailsSource;
-import io.security.corespringsecurity.security.filter.AjaxLoginProcessingFilter;
-import io.security.corespringsecurity.security.handler.CustomAccessDeniedHandler;
+import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
+import io.security.corespringsecurity.security.handler.FormAuthenticationFailureHandler;
+import io.security.corespringsecurity.security.handler.FormAuthenticationSuccessHandler;
 import io.security.corespringsecurity.security.provider.FormAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,9 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Configuration
 @EnableWebSecurity
@@ -31,15 +34,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private FormAuthenticationDetailsSource authenticationDetailsSource;
+    private AuthenticationDetailsSource<HttpServletRequest, WebAuthenticationDetails> authenticationDetailsSource;
     // authenticationDetailsSource 클래스를 의존성 주입
     // 이걸 상위 인터페이스인 AuthenticationDetailsSource 타입으로 주입받으니 HttpSecurity 설정기능이 좀 꼬였음
 
     @Autowired
-    private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private AuthenticationSuccessHandler formAuthenticationSuccessHandler;
 
     @Autowired
-    private AuthenticationFailureHandler customAuthenticationFailureHandler;
+    private AuthenticationFailureHandler formAuthenticationFailureHandler;
+
+    @Bean // 메서드 빈 타입의 패스워드 인코더, 설정된 암호화 방식을 지원한다.
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        // 여러개의 인코더 유행이 선언되어 있다
+        // 상황에 맞게 사용이 가능하다
+        // 스프링 시큐리티 5.0 이전 기본 인코더는 noOp (평문), 현재는 BCrypto
+    }
 
 
     @Override
@@ -56,15 +67,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new FormAuthenticationProvider();
         // 생성한 커스텀 프로바이더 클래스를 빈으로 등록
     }
-
-    @Bean // 메서드 빈 타입의 패스워드 인코더, 설정된 암호화 방식을 지원한다.
-    public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-        // 여러개의 인코더 유행이 선언되어 있다
-        // 상황에 맞게 사용이 가능하다
-        // 스프링 시큐리티 5.0 이전 기본 인코더는 noOp (평문), 현재는 BCrypto
-    }
-
 
     @Override
     public void configure(WebSecurity web) throws Exception {
@@ -91,8 +93,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationDetailsSource(authenticationDetailsSource)
                 // 주입받은 authenticationDetailsSource 를 authenticationDetailsSource api 에 적용하여 동작하도록 설정
                 .defaultSuccessUrl("/")
-                .successHandler(customAuthenticationSuccessHandler) // 성공 핸들러는 기본 성공 Url API 설정보다 아래에
-                .failureHandler(customAuthenticationFailureHandler)
+                .successHandler(formAuthenticationSuccessHandler) // 성공 핸들러는 기본 성공 Url API 설정보다 아래에
+                .failureHandler(formAuthenticationFailureHandler)
                 .permitAll()
             .and()
                 .exceptionHandling()
@@ -106,7 +108,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
-        CustomAccessDeniedHandler customAccessDeniedHandler = new CustomAccessDeniedHandler();
+        FormAccessDeniedHandler customAccessDeniedHandler = new FormAccessDeniedHandler();
         customAccessDeniedHandler.setErrorPage("/denied");
         return customAccessDeniedHandler;
     } // 거부 핸들러를 빈 으로 지정했음
