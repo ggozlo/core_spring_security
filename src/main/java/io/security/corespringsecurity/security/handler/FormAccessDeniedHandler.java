@@ -1,29 +1,49 @@
 package io.security.corespringsecurity.security.handler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.security.corespringsecurity.util.WebUtil;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Component
 public class FormAccessDeniedHandler implements AccessDeniedHandler {
-// 인가 거부시의 동작할 핸들러 생성
-    private String errorPage;
-    // 인가 거부시의 거부된 경로를 필드값으로 설정
-    @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException exception) throws IOException, ServletException {
 
-        String deniedUrl = errorPage + "?exception=" + exception.getMessage();
-        // 거부된 경로에 예외 메시지를 파라미터로 추가함
+	private String errorPage;
 
-        response.sendRedirect(deniedUrl);
-        // 추가된 경로로 리다이렉트트
-    }
+	private ObjectMapper mapper = new ObjectMapper();
 
-    public void setErrorPage(String errorPage) {
+	private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+	
+	@Override
+	public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+
+		if (WebUtil.isAjax(request)) {
+			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+			response.getWriter().write(this.mapper.writeValueAsString(ResponseEntity.status(HttpStatus.FORBIDDEN)));
+
+		} else {
+			String deniedUrl = errorPage + "?exception=" + accessDeniedException.getMessage();
+			redirectStrategy.sendRedirect(request, response, deniedUrl);
+		}
+	}
+	
+	public void setErrorPage(String errorPage) {
+        if ((errorPage != null) && !errorPage.startsWith("/")) {
+            throw new IllegalArgumentException("errorPage must begin with '/'");
+        }
+
         this.errorPage = errorPage;
-    } // 경로 수정자
+    }
 
 }
