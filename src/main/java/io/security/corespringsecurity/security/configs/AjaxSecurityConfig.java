@@ -47,8 +47,8 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .antMatcher("/api/**")
                 .authorizeRequests()
-                .antMatchers("/api/login").permitAll()
                 .antMatchers("/api/messages").hasRole("MANAGER")
+                .antMatchers("/api/login").permitAll()
                 .anyRequest().authenticated()
 
         // 필터를 특정 위치에 추가, formLogin 은 Api 에서 기본 제공하는 필터로 여기서 새부지정을 했지만
@@ -60,7 +60,6 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
                 .accessDeniedHandler(ajaxAccessDeniedHandler());
 //                .and()
 //                .addFilterBefore(ajaxLoginProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.csrf().disable();
 
         customConfigurerAjax(http);
         // 실제 적용
