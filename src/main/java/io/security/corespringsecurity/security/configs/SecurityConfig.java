@@ -2,6 +2,7 @@ package io.security.corespringsecurity.security.configs;
 
 import io.security.corespringsecurity.security.common.FormWebAuthenticationDetailsSource;
 import io.security.corespringsecurity.security.factory.UrlResourcesMapFactoryBean;
+import io.security.corespringsecurity.security.filter.PermitAllFilter;
 import io.security.corespringsecurity.security.handler.AjaxAuthenticationFailureHandler;
 import io.security.corespringsecurity.security.handler.AjaxAuthenticationSuccessHandler;
 import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
@@ -52,6 +53,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private SecurityResourceService securityResourceService;
 
+    private String[] permitAllResource = {"/", "/login", "/user/login/**",};
+
     @Override
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
@@ -72,7 +75,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(final HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -140,11 +142,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public FilterSecurityInterceptor customFilterSecurityInterceptor() throws Exception {
     // 인터셉터에 직접 생성한 MetadataSource 클래스를 적용하여 빈 등록
-        FilterSecurityInterceptor filterSecurityInterceptor = new FilterSecurityInterceptor(); // 필터 생성
-        filterSecurityInterceptor.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource()); // 메타데이터소스 지정
-        filterSecurityInterceptor.setAccessDecisionManager(affirmativeBased()); // 접근 결정 관리자 지정
-        filterSecurityInterceptor.setAuthenticationManager(authenticationManagerBean()); // 인증관리자 지정
-        return filterSecurityInterceptor;
+
+        PermitAllFilter permitAllFilter = new PermitAllFilter(permitAllResource); // 필터 생성
+        permitAllFilter.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource()); // 메타데이터소스 지정
+        permitAllFilter.setAccessDecisionManager(affirmativeBased()); // 접근 결정 관리자 지정
+        permitAllFilter.setAuthenticationManager(authenticationManagerBean()); // 인증관리자 지정
+        return permitAllFilter;
     }
 
     private AccessDecisionManager affirmativeBased() {
