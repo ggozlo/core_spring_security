@@ -18,7 +18,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.access.vote.AffirmativeBased;
+import org.springframework.security.access.vote.RoleHierarchyVoter;
 import org.springframework.security.access.vote.RoleVoter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -36,6 +39,7 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -158,8 +162,28 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     } // 인가 선택자를  affirmativeBased 로 생성, 조건 하나만 충족하면 통과
 
     private List<AccessDecisionVoter<?>> getAccessDecisionVoters() {
-        return Arrays.asList(new RoleVoter());
+
+        List<AccessDecisionVoter<? extends Object>> accessDecisionVoters = new ArrayList<>();
+        accessDecisionVoters.add(roleVoter()); // 계층 기반 보터
+
+       // return Arrays.asList(new RoleVoter());
+        return accessDecisionVoters;
+
         // voter 의 생성 voter 는 역할 기반으로
+    }
+
+    @Bean
+    public AccessDecisionVoter<? extends Object> roleVoter() {
+
+        RoleHierarchyVoter roleHierarchyVoter = new RoleHierarchyVoter(roleHierarchy()); // 권한 계층 보터에 넘김
+
+        return roleHierarchyVoter;
+    }
+
+    @Bean
+    public RoleHierarchyImpl roleHierarchy() {
+        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl(); // 빈으로 등록되어 이니셜라이저에서 권한계층 정보를 받아서 가지고있다
+        return roleHierarchy;
     }
 
 
