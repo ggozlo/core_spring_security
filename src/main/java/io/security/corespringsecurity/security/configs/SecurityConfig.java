@@ -9,6 +9,7 @@ import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
 import io.security.corespringsecurity.security.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import io.security.corespringsecurity.security.provider.AjaxAuthenticationProvider;
 import io.security.corespringsecurity.security.provider.FormAuthenticationProvider;
+import io.security.corespringsecurity.security.voter.IpAccessVoter;
 import io.security.corespringsecurity.service.SecurityResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.FactoryBean;
@@ -164,8 +165,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private List<AccessDecisionVoter<?>> getAccessDecisionVoters() {
 
         List<AccessDecisionVoter<? extends Object>> accessDecisionVoters = new ArrayList<>();
-        accessDecisionVoters.add(roleVoter()); // 계층 기반 보터
-
+        accessDecisionVoters.add(new IpAccessVoter(securityResourceService)); //  심의자는 순서대로 적용됨, 구현한 IpAccess 심의자를 적용시킴
+        accessDecisionVoters.add(roleVoter()); // 계층 기반 심의자
        // return Arrays.asList(new RoleVoter());
         return accessDecisionVoters;
 

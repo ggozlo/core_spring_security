@@ -1,13 +1,7 @@
 package io.security.corespringsecurity.security.listener;
 
-import io.security.corespringsecurity.domain.entity.Account;
-import io.security.corespringsecurity.domain.entity.Resources;
-import io.security.corespringsecurity.domain.entity.Role;
-import io.security.corespringsecurity.domain.entity.RoleHierarchy;
-import io.security.corespringsecurity.repository.ResourcesRepository;
-import io.security.corespringsecurity.repository.RoleHierarchyRepository;
-import io.security.corespringsecurity.repository.RoleRepository;
-import io.security.corespringsecurity.repository.UserRepository;
+import io.security.corespringsecurity.domain.entity.*;
+import io.security.corespringsecurity.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -39,17 +33,22 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     @Autowired
     private RoleHierarchyRepository roleHierarchyRepository;
 
+    @Autowired
+    private AccessIpRepository accessIpRepository;
+
     private static AtomicInteger count = new AtomicInteger(0);
 
     @Override
     @Transactional
     public void onApplicationEvent(final ContextRefreshedEvent event) {
-
+        // 어플리케이션이 실행되때 동작
         if (alreadySetup) {
             return;
         }
 
         setupSecurityResources();
+
+        setupAccessIpData();
 
         alreadySetup = true;
     }
@@ -57,6 +56,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 
 
     private void setupSecurityResources() {
+
 
         Role admin = createRoleIfNotFound("ROLE_ADMIN", "관리자");
         Role manager = createRoleIfNotFound("ROLE_MANAGER", "매니저");
@@ -70,7 +70,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         Role adminRole = createRoleIfNotFound("ROLE_ADMIN", "관리자");
         roles.add(adminRole);
         createResourceIfNotFound("/admin/**", "", roles, "url");
-        Account account = createUserIfNotFound("admin", "pass", "admin@gmail.com", 10,  roles);
+        createUserIfNotFound("admin", "pass", "admin@gmail.com", 10,  roles);
 
 //        Set<Role> roles1 = new HashSet<>();
 //
@@ -160,5 +160,16 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         // 계층구조에 맞춰
     }
 
+    private void setupAccessIpData() {
+
+        AccessIp byIpAddress = accessIpRepository.findByIpAddress("0:0:0:0:0:0:0:1");
+        if (byIpAddress == null) {
+            AccessIp accessIp = AccessIp.builder()
+                    .ipAddress("0:0:0:0:0:0:0:1")
+                    .build();
+            accessIpRepository.save(accessIp);
+        }
+
+    }
 
 }
