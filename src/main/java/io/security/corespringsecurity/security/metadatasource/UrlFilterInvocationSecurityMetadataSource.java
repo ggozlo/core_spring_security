@@ -49,7 +49,7 @@ public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocati
             }
         }
         return null;
-        // 요철정보와 일치하는 엔트리가 없다면 null
+        // 요철정보와 일치하는 엔트리가 없다면 null , 인증을 취소함
     }
 
     @Override
