@@ -10,6 +10,7 @@ import io.security.corespringsecurity.security.token.AjaxAuthenticationToken;
 import io.security.corespringsecurity.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -57,7 +58,15 @@ public class UserController {
 	@GetMapping(value="/mypage")
 	public String myPage(@AuthenticationPrincipal Account account, Authentication authentication, Principal principal) throws Exception {
 
+		System.out.println("account.getEmail() = " + account.getEmail());
 
+		return "user/mypage";
+	}
+
+	@GetMapping("/order")
+	@Secured("ROLE_MANAGER")
+	public String order(){
+		userService.order();
 		return "user/mypage";
 	}
 }

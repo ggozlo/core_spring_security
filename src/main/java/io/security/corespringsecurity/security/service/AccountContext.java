@@ -2,6 +2,7 @@ package io.security.corespringsecurity.security.service;
 
 import io.security.corespringsecurity.domain.entity.Account;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
@@ -16,4 +17,6 @@ public class AccountContext extends User {
     super(account.getUsername(), account.getPassword(), roles);
     this.account = account;
   }
+
+
 }

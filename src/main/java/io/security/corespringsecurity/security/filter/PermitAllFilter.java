@@ -66,7 +66,7 @@ public class PermitAllFilter extends FilterSecurityInterceptor {
                     fi.getRequest().setAttribute("__spring_security_filterSecurityInterceptor_filterApplied", Boolean.TRUE);
                 }
 
-                InterceptorStatusToken token = super.beforeInvocation(fi);
+                InterceptorStatusToken token = this.beforeInvocation(fi);
 
                 try {
                     fi.getChain().doFilter(fi.getRequest(), fi.getResponse());

@@ -1,5 +1,6 @@
 package io.security.corespringsecurity.security.configs;
 
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import io.security.corespringsecurity.security.common.FormWebAuthenticationDetailsSource;
 import io.security.corespringsecurity.security.factory.UrlResourcesMapFactoryBean;
 import io.security.corespringsecurity.security.filter.PermitAllFilter;
@@ -61,7 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private SecurityResourceService securityResourceService;
 
-    private String[] permitAllResource = {"/", "/login", "/user/login/**",};
+    private String[] permitAllResource =  {"/", "/login", "/user/login/**",};
 
     @Override
     public void configure(WebSecurity web) throws Exception {
@@ -83,6 +84,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(final HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
+                .antMatchers("/").permitAll()
+                .antMatchers("/users").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -99,7 +102,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .accessDeniedPage("/denied")
                 .accessDeniedHandler(accessDeniedHandler())
         .and()
-                .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class) // 기존의 필터 앞에
+               .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class) // 기존의 필터 앞에
         ;
 
         http.csrf().disable();
